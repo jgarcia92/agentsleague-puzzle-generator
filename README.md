@@ -32,12 +32,23 @@ An AI-powered riddle and puzzle generator built with GitHub Copilot. Create uniq
    cd C:\Users\jaime\agentsleague-puzzle-generator
    ```
 
-2. **Install dependencies:**
+2. **(Recommended) Create a virtual environment:**
    ```bash
-   pip install -r requirements.txt
+   # Windows (PowerShell)
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+
+   # macOS/Linux (bash/zsh)
+   python3 -m venv .venv
+   source .venv/bin/activate
    ```
 
-3. **Configure environment:**
+3. **Install dependencies:**
+   ```bash
+   python -m pip install -r requirements.txt
+   ```
+
+4. **Configure environment:**
    ```bash
    cp .env.example .env
    # Edit .env (optional for basic demo)
@@ -45,14 +56,15 @@ An AI-powered riddle and puzzle generator built with GitHub Copilot. Create uniq
    # Add OPENAI_API_KEY=... or GOOGLE_API_KEY=...
    ```
 
-4. **Run the CLI demo:**
+5. **Run the CLI demo:**
    ```bash
    python puzzle_generator.py --count 3 --difficulty medium
    ```
 
-5. **Run the Streamlit UI (optional):**
+6. **Run the Streamlit UI (optional):**
    ```bash
-   streamlit run streamlit_app.py
+   # Always use the venv's Python so the right packages/keys are used
+   python -m streamlit run streamlit_app.py
    ```
 
 ### Expected Output
@@ -139,11 +151,12 @@ python puzzle_generator.py --help
 
 ### Web UI (Streamlit)
 ```bash
-streamlit run streamlit_app.py
+python -m streamlit run streamlit_app.py
 ```
 - Open the local URL shown (usually http://localhost:8501)
 - Pick difficulty, category, and count from the sidebar
 - View puzzles inline or switch to JSON and download
+ - For AI generation: choose a provider, apply your API key, and set "Generation mode" to AI
 
 ---
 
@@ -154,7 +167,18 @@ streamlit run streamlit_app.py
 - **Gemini:** set `GOOGLE_API_KEY`.
 - Keep `.env` out of git (already in `.gitignore`). For GitHub Actions or deployments, use repository Secrets.
 
-This project doesn’t require keys for the basic CLI/UI templates. These keys prepare for future LLM-powered features (dynamic puzzle generation, hints, etc.).
+This project doesn’t require keys for the basic CLI/UI templates. Keys enable optional AI-powered generation in the Streamlit UI.
+
+### Using AI generation
+- Open the sidebar → Provider & Keys
+- Choose `openai` or `gemini`, paste your key, and click "Apply Key"
+- Set "Generation mode" to "AI model …" and click Generate
+- The Results header shows the source used: `AI (openai|gemini)` or `Templates (fallback)`
+
+### Diagnostics
+- Expand "Diagnostics" in the sidebar to confirm:
+   - SDK available: yes (package installed in this Python)
+   - Key detected in session: yes (the app can read your key)
 
 ### Next Steps: Build Your Own Features
 Consider these extensions with Copilot help:
@@ -179,6 +203,46 @@ Before submitting to Agents League on **March 1, 2026**:
 - [ ] **Read Disclaimer:** https://github.com/microsoft/agentsleague/blob/main/DISCLAIMER.md
 - [ ] **Code of Conduct acknowledged:** https://github.com/microsoft/agentsleague/blob/main/CODE_OF_CONDUCT.md
 - [ ] **Submit via issue:** https://github.com/microsoft/agentsleague/issues/new?template=project.yml
+
+---
+
+## 🧰 New Machine Setup & Troubleshooting
+
+### Fresh clone setup
+1. Clone and enter the folder
+   ```bash
+   git clone https://github.com/jgarcia92/agentsleague-puzzle-generator.git
+   cd agentsleague-puzzle-generator
+   ```
+2. Create and activate a virtualenv
+   ```bash
+   # Windows (PowerShell)
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+
+   # macOS/Linux (bash/zsh)
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+3. Install dependencies
+   ```bash
+   python -m pip install -r requirements.txt
+   ```
+4. Optional: copy env and add keys
+   ```bash
+   cp .env.example .env
+   # Then edit .env to add OPENAI_API_KEY or GOOGLE_API_KEY
+   ```
+5. Run the UI
+   ```bash
+   python -m streamlit run streamlit_app.py
+   ```
+
+### Common issues
+- SDK not found (openai/google-generativeai): ensure you installed deps in the active venv and launched Streamlit via `python -m streamlit`.
+- Results say "Templates (AI requested but fell back)": the model returned non‑JSON or there was an auth/error. Check sidebar Diagnostics and re‑apply your key.
+- Port already in use: `python -m streamlit run streamlit_app.py --server.port 8502`.
+- Wrong Python picked up: re‑activate `.venv` and confirm with `python --version`.
 
 ---
 
