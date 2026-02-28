@@ -133,11 +133,47 @@ def generate_puzzles(
     if count < 1 or count > 100:
         raise ValueError("Count must be between 1 and 100")
     
-    puzzles = []
-    for _ in range(count):
-        puzzles.append(generate_puzzle(difficulty, category))
-    
-    return puzzles
+    # Build pools to sample without replacement, preferring exact matches first
+    exact_pool: List[Dict] = []
+    same_diff_pool: List[Dict] = []
+    any_pool: List[Dict] = []
+
+    for puzzles in PUZZLE_TEMPLATES.values():
+        for p in puzzles:
+            any_pool.append(p)
+            if p["difficulty"] == difficulty:
+                same_diff_pool.append(p)
+                if p["category"] == category:
+                    exact_pool.append(p)
+
+    # Helper to sample unique items from a pool excluding already chosen
+    def take_from(pool: List[Dict], chosen: List[Dict], k: int) -> None:
+        remaining = [p for p in pool if p not in chosen]
+        if not remaining or k <= 0:
+            return
+        if len(remaining) <= k:
+            chosen.extend(remaining)
+        else:
+            chosen.extend(random.sample(remaining, k))
+
+    selected: List[Dict] = []
+    # 1) exact category + difficulty
+    take_from(exact_pool, selected, count)
+    # 2) broaden to same difficulty across categories
+    if len(selected) < count:
+        take_from(same_diff_pool, selected, count - len(selected))
+    # 3) broaden to any remaining templates
+    if len(selected) < count:
+        take_from(any_pool, selected, count - len(selected))
+
+    # If still short (very small template set), allow replacement as last resort
+    while len(selected) < count:
+        selected.append(random.choice(any_pool))
+
+    # Trim and shuffle to avoid a fixed first puzzle
+    selected = selected[:count]
+    random.shuffle(selected)
+    return selected
 
 
 def format_output(puzzles: List[Dict], output_format: str = "text") -> str:

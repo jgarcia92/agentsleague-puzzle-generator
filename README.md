@@ -206,3 +206,7 @@ MIT License – feel free to use, modify, and share.
 ---
 
 **Built with ❤️ and GitHub Copilot for Agents League 2026**
+
+**Evidence using Github Copilot**
+![alt text](image.png)
+![alt text](image-1.png)
