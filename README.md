@@ -40,7 +40,9 @@ An AI-powered riddle and puzzle generator built with GitHub Copilot. Create uniq
 3. **Configure environment:**
    ```bash
    cp .env.example .env
-   # Edit .env with your settings (optional for basic demo)
+   # Edit .env (optional for basic demo)
+   # Set MODEL_PROVIDER=openai or gemini
+   # Add OPENAI_API_KEY=... or GOOGLE_API_KEY=...
    ```
 
 4. **Run the CLI demo:**
@@ -142,6 +144,17 @@ streamlit run streamlit_app.py
 - Open the local URL shown (usually http://localhost:8501)
 - Pick difficulty, category, and count from the sidebar
 - View puzzles inline or switch to JSON and download
+
+---
+
+## 🔑 API Keys (Optional)
+
+- **Provider:** set `MODEL_PROVIDER` to `openai`, `gemini`, or `none` (default).
+- **OpenAI:** set `OPENAI_API_KEY`.
+- **Gemini:** set `GOOGLE_API_KEY`.
+- Keep `.env` out of git (already in `.gitignore`). For GitHub Actions or deployments, use repository Secrets.
+
+This project doesn’t require keys for the basic CLI/UI templates. These keys prepare for future LLM-powered features (dynamic puzzle generation, hints, etc.).
 
 ### Next Steps: Build Your Own Features
 Consider these extensions with Copilot help:
