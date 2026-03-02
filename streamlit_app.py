@@ -280,6 +280,23 @@ def _generate_puzzles_via_ai(count: int, difficulty: str, category: str, provide
     return generate_puzzles(count=count, difficulty=difficulty, category=category)
 
 
+def _env_or(default_value: str, env_name: str, allowed: list[str]) -> str:
+    val = os.getenv(env_name, default_value)
+    return val if val in allowed else default_value
+
+
+def _puzzles_to_csv(puzzles: list[dict]) -> str:
+    import csv
+    from io import StringIO
+
+    buf = StringIO()
+    writer = csv.DictWriter(buf, fieldnames=["question", "answer", "difficulty", "category"], extrasaction="ignore")
+    writer.writeheader()
+    for p in puzzles:
+        writer.writerow(p)
+    return buf.getvalue()
+
+
 def main():
     st.set_page_config(page_title="Puzzle Generator", page_icon="🧩", layout="wide")
 
@@ -339,16 +356,26 @@ def main():
 
         st.divider()
         st.header("Controls")
-        count = st.number_input("How many puzzles?", min_value=1, max_value=50, value=5)
-        difficulty = st.selectbox("Difficulty", DIFFICULTIES, index=DIFFICULTIES.index("medium"))
-        category = st.selectbox("Category", CATEGORIES, index=CATEGORIES.index("general"))
-        output_format = st.radio("Format", ["text", "json"], index=0, horizontal=True)
+        # Defaults from .env on first load; Streamlit keeps state via keys thereafter
+        dflt_diff = _env_or("medium", "PUZZLE_DIFFICULTY", DIFFICULTIES)
+        dflt_cat = _env_or("general", "PUZZLE_CATEGORY", CATEGORIES)
+        dflt_fmt = _env_or("text", "OUTPUT_FORMAT", ["text", "json"])
+        try:
+            dflt_count = max(1, min(50, int(os.getenv("PUZZLE_COUNT", "5"))))
+        except Exception:
+            dflt_count = 5
+
+        count = st.number_input("How many puzzles?", min_value=1, max_value=50, value=dflt_count, key="ui_count")
+        difficulty = st.selectbox("Difficulty", DIFFICULTIES, index=DIFFICULTIES.index(dflt_diff), key="ui_difficulty")
+        category = st.selectbox("Category", CATEGORIES, index=CATEGORIES.index(dflt_cat), key="ui_category")
+        output_format = st.radio("Format", ["text", "json"], index=["text","json"].index(dflt_fmt), horizontal=True, key="ui_format")
         # Let users choose generation source. AI option visible even if keys missing; we'll fallback gracefully.
         mode_label = "AI model (OpenAI/Gemini)" if (provider in ("openai", "gemini")) else "AI model (enable provider to use)"
         gen_mode = st.radio(
             "Generation mode",
             ["Templates (offline)", mode_label],
             index=0,
+            key="ui_gen_mode",
         )
         use_ai = gen_mode.startswith("AI model") and (provider in ("openai", "gemini")) and ok
         auto = st.toggle("Generate on load", value=True, help="Create puzzles automatically on first load")
@@ -401,6 +428,26 @@ def main():
                             st.info(p["answer"], icon="💡")
                             st.button("Copy answer", key=f"copy_{i}", help="Copy not available in all browsers")
                         st.divider()
+
+                # Always offer downloads
+                dl_cols = st.columns(2)
+                with dl_cols[0]:
+                    st.download_button(
+                        label="⬇️ Download JSON",
+                        data=json.dumps(puzzles, indent=2),
+                        file_name="puzzles.json",
+                        mime="application/json",
+                    )
+                with dl_cols[1]:
+                    st.download_button(
+                        label="⬇️ Download CSV",
+                        data=_puzzles_to_csv(puzzles),
+                        file_name="puzzles.csv",
+                        mime="text/csv",
+                    )
+
+                # Delight: small confetti on success
+                st.balloons()
         except ValueError as e:
             st.error(f"{e}")
     else:
